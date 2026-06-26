@@ -46,7 +46,22 @@ jobs:
       # 构建
       - name: Build
         run: cmake --build build --config ${{ matrix.build_type }}
+        
+      # artifact 上传
+      - name: Upload artifact (executable + required dynamic libs)
+        uses: actions/upload-artifact@v4
+        with:
+          name: carTrainerSystem-${{ matrix.os }}-${{ matrix.build_type }}
+          path: |
+            build/src/carTrainerSystem*
+            build/src/Release/carTrainerSystem.exe
+            ${{ matrix.os == 'windows-latest' && 'build/vcpkg_installed/x64-windows/bin/*.dll' || '' }}
+            ${{ matrix.os == 'ubuntu-latest' && 'build/vcpkg_installed/x64-linux/lib/*.so*' || '' }}
+            ${{ matrix.os == 'macos-latest' && 'build/vcpkg_installed/x64-osx/lib/*.dylib' || '' }}
 
+      - name: Test
+        working-directory: build
+        run: ctest --build-config ${{ matrix.build_type }}
       # 测试
       - name: Test
         working-directory: build
