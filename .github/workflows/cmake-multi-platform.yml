@@ -1,4 +1,4 @@
-name: CMake Multi-Platform (Ubuntu, Windows, macOS)
+name: CMake Multi-Platform
 
 on:
   push:
@@ -13,49 +13,41 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        build_type: [Release]   # 可添加 Debug 等
+        build_type: [Release]
 
     steps:
       - uses: actions/checkout@v4
 
-      # ---------- 1. 安装 Linux 专属系统依赖 ----------
-      - name: Install system dependencies (Linux only)
+      # Linux 系统依赖
+      - name: Install system dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            libx11-dev \
-            libxft-dev \
-            libxext-dev \
-            libxinerama-dev \
-            libxcursor-dev \
-            libxrender-dev \
-            libxfixes-dev \
-            libglu1-mesa-dev \
-            libfontconfig1-dev \
-            libpango1.0-dev \
-            libcairo2-dev
+            libx11-dev libxft-dev libxext-dev libxinerama-dev \
+            libxcursor-dev libxrender-dev libxfixes-dev \
+            libglu1-mesa-dev libfontconfig1-dev libpango1.0-dev libcairo2-dev
 
-      # ---------- 2. 使用 vcpkg 安装 C++ 依赖 ----------
+      # vcpkg 安装依赖
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgJsonGlob: 'vcpkg.json'
 
-      # ---------- 3. 配置 CMake ----------
+      # 配置 CMake
       - name: Configure CMake
-        shell: bash   # 👈 保证所有平台都用 bash，避免 Windows 上 PowerShell 的换行问题
+        shell: bash
         run: |
           cmake -B build \
-            -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake \
+            -DCMAKE_TOOLCHAIN_FILE="$GITHUB_WORKSPACE/vcpkg/scripts/buildsystems/vcpkg.cmake" \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-            -S ${{ github.workspace }}
+            -S "$GITHUB_WORKSPACE"
 
-      # ---------- 4. 构建 ----------
+      # 构建
       - name: Build
         run: cmake --build build --config ${{ matrix.build_type }}
 
-      # ---------- 5. 测试（可选） ----------
+      # 测试
       - name: Test
         working-directory: build
         run: ctest --build-config ${{ matrix.build_type }}
