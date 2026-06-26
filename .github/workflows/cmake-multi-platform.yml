@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Linux 系统依赖
+      # 1. 安装 Linux 系统依赖
       - name: Install system dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
@@ -28,13 +28,13 @@ jobs:
             libxcursor-dev libxrender-dev libxfixes-dev \
             libglu1-mesa-dev libfontconfig1-dev libpango1.0-dev libcairo2-dev
 
-      # vcpkg 安装依赖
+      # 2. vcpkg 安装 C++ 依赖
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgJsonGlob: 'vcpkg.json'
 
-      # 配置 CMake
+      # 3. 配置 CMake
       - name: Configure CMake
         shell: bash
         run: |
@@ -43,26 +43,60 @@ jobs:
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             -S "$GITHUB_WORKSPACE"
 
-      # 构建
+      # 4. 构建
       - name: Build
         run: cmake --build build --config ${{ matrix.build_type }}
-        
-      # artifact 上传
-      - name: Upload artifact (executable + required dynamic libs)
+
+      # 5. 收集运行时依赖（可执行文件 + 动态库）到 release/ 目录
+      - name: Gather runtime dependencies
+        shell: bash
+        run: |
+          # 确定平台对应的 vcpkg 三元组和动态库特征
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+            TRIPLET=x64-windows
+            LIB_DIR=bin
+            LIB_EXT="dll"
+          elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+            TRIPLET=x64-linux
+            LIB_DIR=lib
+            LIB_EXT="so"
+          else
+            TRIPLET=x64-osx
+            LIB_DIR=lib
+            LIB_EXT="dylib"
+          fi
+
+          mkdir release
+
+          # 复制可执行文件
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+            cp build/src/Release/carTrainerSystem.exe release/
+          else
+            cp build/src/carTrainerSystem release/
+          fi
+
+          # 复制 vcpkg 提供的动态库
+          VCPKG_LIB_DIR="build/vcpkg_installed/${TRIPLET}/${LIB_DIR}"
+          if [ -d "$VCPKG_LIB_DIR" ]; then
+            cp "$VCPKG_LIB_DIR"/*."$LIB_EXT" release/ 2>/dev/null || true
+            # Linux 动态库常带版本后缀（如 libsqlite3.so.0），需要额外复制
+            if [ "$LIB_EXT" == "so" ]; then
+              cp "$VCPKG_LIB_DIR"/*.so.* release/ 2>/dev/null || true
+            fi
+          fi
+
+          # 调试输出：列出 release/ 内容
+          echo "Contents of release directory:"
+          ls -la release/
+
+      # 6. 上传 artifact（仅 release/ 目录，解压即用）
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: carTrainerSystem-${{ matrix.os }}-${{ matrix.build_type }}
-          path: |
-            build/src/carTrainerSystem*
-            build/src/Release/carTrainerSystem.exe
-            ${{ matrix.os == 'windows-latest' && 'build/vcpkg_installed/x64-windows/bin/*.dll' || '' }}
-            ${{ matrix.os == 'ubuntu-latest' && 'build/vcpkg_installed/x64-linux/lib/*.so*' || '' }}
-            ${{ matrix.os == 'macos-latest' && 'build/vcpkg_installed/x64-osx/lib/*.dylib' || '' }}
+          path: release/
 
-      - name: Test
-        working-directory: build
-        run: ctest --build-config ${{ matrix.build_type }}
-      # 测试
+      # 7. 测试
       - name: Test
         working-directory: build
         run: ctest --build-config ${{ matrix.build_type }}
