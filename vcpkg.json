@@ -1,0 +1,9 @@
+{
+    "name": "car-trainer-system",
+    "version": "1.1.0",
+    "dependencies": [
+        "sqlite3",
+        "fltk"
+    ],
+    "builtin-baseline": "f7423ee4e5e3b2b1d2f7a3c8d6e9b0a1c2d3e4f5"
+}
