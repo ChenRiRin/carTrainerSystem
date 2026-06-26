@@ -24,6 +24,5 @@ public:
 
     void updateStudent(const Student& s);
     void updateSchedule(const Schedule& s);
-    int deleteExpiredSchedules(const std::string& now);
-    int deleteSchedule(int scheduleId);
+    int markExpiredSchedules(const std::string& now);
 };

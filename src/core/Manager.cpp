@@ -116,7 +116,7 @@ double Manager::refund(int scheduleId) {
     if (!s || s->status != "active") return 0;
     auto* student = findStudent(s->studentId);
     if (!student) return 0;
-    double refundAmount = time_utils::calculateRefund(s->cost, s->durationMinutes, s->durationMinutes);
+    double refundAmount = time_utils::calculateRefund(s->cost, 0, s->durationMinutes);
     double hoursToReturn = time_utils::toHours(s->durationMinutes) * (refundAmount / s->cost);
     student->remainingHours += hoursToReturn;
     s->status = "refunded";
@@ -142,7 +142,7 @@ int Manager::cleanExpired() {
             ++count;
         }
     }
-    db.deleteExpiredSchedules(now);
+    db.markExpiredSchedules(now);
     return count;
 }
 

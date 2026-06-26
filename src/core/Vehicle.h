@@ -5,25 +5,25 @@
 class Vehicle {
 public:
     virtual ~Vehicle() = default;
-    virtual double calculateFee(int minutes) const = 0;
-    virtual const char* typeName() const = 0;
+    [[nodiscard]] virtual double calculateFee(int minutes) const = 0;
+    [[nodiscard]] virtual const char* typeName() const = 0;
     static std::unique_ptr<Vehicle> create(const std::string& type);
 };
 
-class Car : public Vehicle {
+class Car final : public Vehicle {
 public:
-    double calculateFee(int minutes) const override;
-    const char* typeName() const override { return "轿车"; }
+    [[nodiscard]] double calculateFee(int minutes) const override;
+    [[nodiscard]] const char* typeName() const override { return "轿车"; }
 };
 
-class SUV : public Vehicle {
+class SUV final : public Vehicle {
 public:
-    double calculateFee(int minutes) const override;
-    const char* typeName() const override { return "SUV"; }
+    [[nodiscard]] double calculateFee(int minutes) const override;
+    [[nodiscard]] const char* typeName() const override { return "SUV"; }
 };
 
-class Truck : public Vehicle {
+class Truck final : public Vehicle {
 public:
-    double calculateFee(int minutes) const override;
-    const char* typeName() const override { return "卡车"; }
+    [[nodiscard]] double calculateFee(int minutes) const override;
+    [[nodiscard]] const char* typeName() const override { return "卡车"; }
 };

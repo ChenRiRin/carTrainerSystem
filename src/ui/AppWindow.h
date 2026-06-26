@@ -8,7 +8,7 @@
 #include <functional>
 #include "core/Manager.h"
 
-class StudentTable : public Fl_Table_Row {
+class StudentTable final : public Fl_Table_Row {
     Manager& manager;
     int contextRow = -1;
     int handle(int event) override;
@@ -20,7 +20,7 @@ public:
     std::function<void(const std::string&)> onRightClick;
 };
 
-class ScheduleTable : public Fl_Table_Row {
+class ScheduleTable final : public Fl_Table_Row {
     Manager& manager;
     int contextRow = -1;
     int handle(int event) override;
@@ -33,7 +33,7 @@ public:
     std::function<void(int)> onRefundClick;
 };
 
-class AppWindow : public Fl_Window {
+class AppWindow final : public Fl_Window {
 public:
     enum MenuAction {
         MENU_ADD_RESERVATION = 1,

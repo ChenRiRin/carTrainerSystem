@@ -163,24 +163,12 @@ void Database::updateSchedule(const Schedule& s) {
     saveSchedule(s);
 }
 
-int Database::deleteExpiredSchedules(const std::string& now) {
+int Database::markExpiredSchedules(const std::string& now) {
     if (!db) return 0;
-    auto sql = "DELETE FROM schedules WHERE date < ? AND status = 'active'";
+    auto sql = "UPDATE schedules SET status = 'expired' WHERE date < ? AND status = 'active'";
     sqlite3_stmt* stmt;
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK) return 0;
     sqlite3_bind_text(stmt, 1, now.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_step(stmt);
-    int count = sqlite3_changes(db);
-    sqlite3_finalize(stmt);
-    return count;
-}
-
-int Database::deleteSchedule(int scheduleId) {
-    if (!db) return 0;
-    auto sql = "DELETE FROM schedules WHERE id = ?";
-    sqlite3_stmt* stmt;
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK) return 0;
-    sqlite3_bind_int(stmt, 1, scheduleId);
     sqlite3_step(stmt);
     int count = sqlite3_changes(db);
     sqlite3_finalize(stmt);

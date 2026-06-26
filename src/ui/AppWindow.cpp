@@ -18,7 +18,7 @@ StudentTable::StudentTable(int X, int Y, int W, int H, Manager& mgr)
 {
     col_header(1);
     col_resize(1);
-    cols(4);
+    Fl_Table::cols(4);
     col_width(0, 180);
     col_width(1, 200);
     col_width(2, 120);
@@ -40,6 +40,7 @@ void StudentTable::draw_cell(TableContext context, int R, int C, int X, int Y, i
                 case 1: fl_draw("姓名", X + 15, Y, W - 15, H, FL_ALIGN_LEFT); break;
                 case 2: fl_draw("车型", X + 15, Y, W - 15, H, FL_ALIGN_LEFT); break;
                 case 3: fl_draw("剩余课时", X + 15, Y, W - 15, H, FL_ALIGN_LEFT); break;
+                default: ;
             }
             fl_pop_clip();
             break;
@@ -62,6 +63,7 @@ void StudentTable::draw_cell(TableContext context, int R, int C, int X, int Y, i
                 case 1: snprintf(buf, sizeof(buf), "%s", s.name.c_str()); break;
                 case 2: snprintf(buf, sizeof(buf), "%s", s.vehicleType.c_str()); break;
                 case 3: snprintf(buf, sizeof(buf), "%.1fh", s.remainingHours); break;
+                default: ;
             }
             fl_draw(buf, X + 15, Y, W - 15, H, FL_ALIGN_LEFT);
             if (!row_selected(R)) {
@@ -85,12 +87,11 @@ int StudentTable::handle(int event) {
         if (contextRow < 0 || contextRow >= rows()) return 0;
         for (int r = 0; r < rows(); ++r) select_row(r, r == contextRow);
         redraw();
-        Fl_Menu_Item menu[] = {
+        constexpr Fl_Menu_Item menu[] = {
             {"新增预约", 0, nullptr, nullptr},
-            {0}
+            {nullptr}
         };
-        auto* m = menu->popup(Fl::event_x(), Fl::event_y(), nullptr, nullptr, nullptr);
-        if (m && onRightClick) {
+        if (auto* m = menu->popup(Fl::event_x(), Fl::event_y(), nullptr, nullptr, nullptr); m && onRightClick) {
             onRightClick(manager.getStudents()[contextRow].id);
         }
         return 1;
@@ -99,7 +100,7 @@ int StudentTable::handle(int event) {
 }
 
 void StudentTable::refresh() {
-    rows(manager.getStudents().size());
+    rows(static_cast<int>(manager.getStudents().size()));
     redraw();
 }
 
@@ -108,7 +109,7 @@ ScheduleTable::ScheduleTable(int X, int Y, int W, int H, Manager& mgr)
 {
     col_header(1);
     col_resize(1);
-    cols(5);
+    Fl_Table::cols(5);
     col_width(0, 50);
     col_width(1, 200);
     col_width(2, 200);
@@ -131,6 +132,7 @@ void ScheduleTable::draw_cell(TableContext context, int R, int C, int X, int Y, 
                 case 2: fl_draw("日期", X + 15, Y, W - 15, H, FL_ALIGN_LEFT); break;
                 case 3: fl_draw("时长", X + 15, Y, W - 15, H, FL_ALIGN_LEFT); break;
                 case 4: fl_draw("状态", X + 15, Y, W - 15, H, FL_ALIGN_LEFT); break;
+                default: ;
             }
             fl_pop_clip();
             break;
@@ -154,6 +156,7 @@ void ScheduleTable::draw_cell(TableContext context, int R, int C, int X, int Y, 
                 case 2: snprintf(buf, sizeof(buf), "%s", s.date.c_str()); break;
                 case 3: snprintf(buf, sizeof(buf), "%s", time_utils::format(s.durationMinutes).c_str()); break;
                 case 4: snprintf(buf, sizeof(buf), "%s", s.status.c_str()); break;
+                default: ;
             }
             fl_draw(buf, X + 15, Y, W - 15, H, FL_ALIGN_LEFT);
             if (!row_selected(R)) {
@@ -180,7 +183,7 @@ int ScheduleTable::handle(int event) {
         Fl_Menu_Item menu[] = {
             {"修改时长", 0, nullptr, nullptr},
             {"退费", 0, nullptr, nullptr},
-            {0}
+            {nullptr}
         };
         auto* m = menu->popup(Fl::event_x(), Fl::event_y(), nullptr, nullptr, nullptr);
         if (m) {
@@ -194,7 +197,7 @@ int ScheduleTable::handle(int event) {
 }
 
 void ScheduleTable::refresh() {
-    rows(manager.getSchedules().size());
+    rows(static_cast<int>(manager.getSchedules().size()));
     redraw();
 }
 
@@ -203,22 +206,21 @@ static Fl_Menu_Item menu_items[] = {
         {"新增预约", FL_COMMAND + 'n', AppWindow::menu_cb, (void*)AppWindow::MENU_ADD_RESERVATION},
         {"修改时长", 0, AppWindow::menu_cb, (void*)AppWindow::MENU_MODIFY_DURATION},
         {"退费", 0, AppWindow::menu_cb, (void*)AppWindow::MENU_REFUND},
-        {0},
+        {nullptr},
     {"学员管理", 0, nullptr, nullptr, FL_SUBMENU},
         {"新增学员", 0, AppWindow::menu_cb, (void*)AppWindow::MENU_ADD_STUDENT},
         {"按剩余课时排序", 0, AppWindow::menu_cb, (void*)AppWindow::MENU_SORT_STUDENTS},
-        {0},
+        {nullptr},
     {"系统", 0, nullptr, nullptr, FL_SUBMENU},
         {"清理过期预约", 0, AppWindow::menu_cb, (void*)AppWindow::MENU_CLEAN_EXPIRED},
         {"保存", FL_COMMAND + 's', AppWindow::menu_cb, (void*)AppWindow::MENU_SAVE},
         {"退出", FL_COMMAND + 'q', AppWindow::menu_cb, (void*)AppWindow::MENU_EXIT},
-        {0},
-    {0}
+        {nullptr},
+    {nullptr}
 };
 
 void AppWindow::menu_cb(Fl_Widget* w, void* data) {
-    auto* win = dynamic_cast<AppWindow*>(w->window());
-    if (win) win->handleMenu((intptr_t)data);
+    if (auto* win = dynamic_cast<AppWindow*>(w->window())) win->handleMenu((intptr_t)data);
 }
 
 void AppWindow::onCleanTimeout(void* data) {
@@ -255,8 +257,6 @@ AppWindow::AppWindow()
     scheduleLabel->labelsize(13);
     scheduleLabel->labelfont(FL_HELVETICA_BOLD);
 
-    scheduleTable = new ScheduleTable(0, 316, 960, 254, manager);
-
     scheduleTable = new ScheduleTable(0, 312, 960, 258, manager);
 
     statusBar = new Fl_Output(0, 580, 480, 30, "");
@@ -283,7 +283,15 @@ AppWindow::AppWindow()
 
     Fl::add_timeout(300.0, onCleanTimeout, this);
 
-    updateStatus("就绪");
+    int expired = manager.cleanExpired();
+    if (expired > 0) {
+        manager.save();
+        char buf[64];
+        snprintf(buf, sizeof(buf), "启动时清理了 %d 条过期预约", expired);
+        updateStatus(buf);
+    } else {
+        updateStatus("就绪");
+    }
     refreshTables();
 }
 
@@ -298,6 +306,7 @@ void AppWindow::handleMenu(int action) {
             case MENU_CLEAN_EXPIRED: doCleanExpired(); break;
             case MENU_SAVE: doSave(); break;
             case MENU_EXIT: hide(); break;
+            default: ;
         }
     } catch (const std::exception& e) {
         fl_alert("错误: %s", e.what());
@@ -307,11 +316,11 @@ void AppWindow::handleMenu(int action) {
 
 void AppWindow::showAddStudent() {
     struct Dlg {
-        Fl_Window* win;
-        Fl_Input* name;
-        Fl_Input* phone;
-        Fl_Choice* type;
-        Fl_Input* hours;
+        Fl_Window* win{};
+        Fl_Input* name{};
+        Fl_Input* phone{};
+        Fl_Choice* type{};
+        Fl_Input* hours{};
         bool confirmed{};
     };
 
@@ -332,7 +341,9 @@ void AppWindow::showAddStudent() {
         auto* dlg = static_cast<Dlg*>(data);
         std::string phone = dlg->phone->value();
         std::string name = dlg->name->value();
-        double hours = std::stod(std::string(dlg->hours->value()));
+        double hours;
+        try { hours = std::stod(std::string(dlg->hours->value())); }
+        catch (...) { fl_alert("总课时必须为数字"); return; }
         if (phone.length() != 11 ||
             phone.find_first_not_of("0123456789") != std::string::npos) {
             fl_alert("手机号格式错误，请输入11位数字"); return;
@@ -355,8 +366,11 @@ void AppWindow::showAddStudent() {
 
     if (!d->confirmed) { delete d; return; }
 
-    auto& s = manager.addStudent(d->phone->value(), d->name->value(),
-                                  d->type->text(), std::stod(d->hours->value()));
+    double totalHours;
+    try { totalHours = std::stod(d->hours->value()); }
+    catch (...) { fl_alert("总课时必须为数字"); delete d; return; }
+    const auto& s = manager.addStudent(d->phone->value(), d->name->value(),
+                                  d->type->text(), totalHours);
     char buf[96];
     snprintf(buf, sizeof(buf), "学员 %s(%s) 注册成功, 剩余 %.1f 课时",
              s.name.c_str(), s.id.c_str(), s.remainingHours);
@@ -367,15 +381,15 @@ void AppWindow::showAddStudent() {
 
 void AppWindow::showAddReservation(const std::string& preselectedId) {
     struct Dlg {
-        Fl_Window* win;
-        Fl_Input* search;
-        Fl_Browser* browser;
-        Fl_Output* selectedOut;
-        Fl_Input* date;
-        Fl_Input* duration;
-        Fl_Output* feeOutput;
-        Manager* mgr;
-        AppWindow* app;
+        Fl_Window* win{};
+        Fl_Input* search{};
+        Fl_Browser* browser{};
+        Fl_Output* selectedOut{};
+        Fl_Input* date{};
+        Fl_Input* duration{};
+        Fl_Output* feeOutput{};
+        Manager* mgr{};
+        AppWindow* app{};
         std::string selectedId;
         std::function<void()> updateFee;
     };
