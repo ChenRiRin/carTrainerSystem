@@ -15,3 +15,17 @@ add_executable(carTrainerSystem
 )
 target_include_directories(carTrainerSystem PRIVATE ${FLTK_INCLUDE_DIR})
 target_link_libraries(carTrainerSystem PRIVATE core_lib ${FLTK_LIBRARIES})
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    find_package(X11 REQUIRED)
+    find_package(Fontconfig REQUIRED)
+    target_link_libraries(carTrainerSystem PRIVATE
+        ${X11_LIBRARIES}
+        ${X11_Xft_LIB}
+        ${X11_Xrender_LIB}
+        ${X11_Xfixes_LIB}
+        ${X11_Xcursor_LIB}
+        ${X11_Xinerama_LIB}
+        Fontconfig::Fontconfig
+    )
+endif()
