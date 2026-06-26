@@ -1,4 +1,4 @@
-name: CMake on multiple platforms with SQLite and FLTK
+name: CMake Multi-Platform (Ubuntu, Windows, macOS)
 
 on:
   push:
@@ -12,31 +12,50 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]   # 可加 mac
-        build_type: [Release]                               # 也可加 Debug
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        build_type: [Release]   # 可添加 Debug 等
 
     steps:
       - uses: actions/checkout@v4
 
-      # 1. 安装依赖（vcpkg 自动处理所有平台）
-      - name: Setup vcpkg and install dependencies
+      # ---------- 1. 安装 Linux 专属系统依赖 ----------
+      - name: Install system dependencies (Linux only)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libx11-dev \
+            libxft-dev \
+            libxext-dev \
+            libxinerama-dev \
+            libxcursor-dev \
+            libxrender-dev \
+            libxfixes-dev \
+            libglu1-mesa-dev \
+            libfontconfig1-dev \
+            libpango1.0-dev \
+            libcairo2-dev
+
+      # ---------- 2. 使用 vcpkg 安装 C++ 依赖 ----------
+      - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgJsonGlob: 'vcpkg.json'
 
-      # 2. 配置 CMake（使用 vcpkg 工具链，编译器自动检测）
+      # ---------- 3. 配置 CMake ----------
       - name: Configure CMake
+        shell: bash   # 👈 保证所有平台都用 bash，避免 Windows 上 PowerShell 的换行问题
         run: |
           cmake -B build \
             -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             -S ${{ github.workspace }}
 
-      # 3. 编译
+      # ---------- 4. 构建 ----------
       - name: Build
         run: cmake --build build --config ${{ matrix.build_type }}
 
-      # 4. 测试（如果有）
+      # ---------- 5. 测试（可选） ----------
       - name: Test
         working-directory: build
         run: ctest --build-config ${{ matrix.build_type }}
