@@ -494,7 +494,9 @@ void AppWindow::showAddReservation(const std::string& preselectedId) {
         }
         std::string dur = dlg->duration->value();
         if (dur.empty()) { fl_alert("请输入时长"); return; }
-        int minutes = std::stoi(dur);
+        int minutes;
+        try { minutes = std::stoi(dur); }
+        catch (...) { fl_alert("时长必须为数字"); return; }
         if (minutes <= 0) { fl_alert("时长必须为正数"); return; }
         try {
             auto s = dlg->mgr->addReservation(dlg->selectedId, date, minutes);
@@ -565,11 +567,15 @@ void AppWindow::showModifyDuration(int preselectedId) {
         auto* dlg = static_cast<Dlg*>(data);
         std::string dur = dlg->dur->value();
         if (dur.empty()) { fl_alert("请输入时长"); return; }
-        int newMinutes = std::stoi(dur);
+        int newMinutes;
+        try { newMinutes = std::stoi(dur); }
+        catch (...) { fl_alert("时长必须为数字"); return; }
         if (newMinutes <= 0) { fl_alert("时长必须为正数"); return; }
         std::string id = dlg->sid->value();
         if (id.empty()) { fl_alert("请输入预约ID"); return; }
-        int scheduleId = std::stoi(id);
+        int scheduleId;
+        try { scheduleId = std::stoi(id); }
+        catch (...) { fl_alert("预约ID必须为数字"); return; }
         try {
             if (dlg->mgr->modifyDuration(scheduleId, newMinutes)) {
                 dlg->mgr->save();
@@ -618,7 +624,9 @@ void AppWindow::showRefund(int preselectedId) {
         auto* dlg = static_cast<Dlg*>(data);
         std::string id = dlg->sid->value();
         if (id.empty()) { fl_alert("请输入预约ID"); return; }
-        int scheduleId = std::stoi(id);
+        int scheduleId;
+        try { scheduleId = std::stoi(id); }
+        catch (...) { fl_alert("预约ID必须为数字"); return; }
         try {
             double refundAmount = dlg->mgr->refund(scheduleId);
             if (refundAmount > 0) {

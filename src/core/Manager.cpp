@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <sstream>
 #include <iomanip>
+#include <ctime>
 
 Manager::Manager(const std::string& dbPath) : db(dbPath) {
     db.initTables();
@@ -78,6 +79,16 @@ Schedule Manager::addReservation(const std::string& studentId, const std::string
     double hoursNeeded = time_utils::toHours(minutes);
     if (hoursNeeded > student->remainingHours) {
         throw std::runtime_error("剩余课时不足");
+    }
+    time_t newStart = time_utils::toTimeT(date);
+    time_t newEnd = newStart + static_cast<time_t>(minutes) * 60;
+    for (const auto& existing : schedules) {
+        if (existing.studentId != studentId || existing.status != "active") continue;
+        time_t existingStart = time_utils::toTimeT(existing.date);
+        time_t existingEnd = existingStart + static_cast<time_t>(existing.durationMinutes) * 60;
+        if (newStart < existingEnd && existingStart < newEnd) {
+            throw std::runtime_error("该时段已有预约，请选择其他时间");
+        }
     }
     auto vehicle = Vehicle::create(student->vehicleType);
     double cost = vehicle->calculateFee(minutes);

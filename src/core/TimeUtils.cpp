@@ -2,6 +2,7 @@
 #include <sstream>
 #include <iomanip>
 #include <ctime>
+#include <chrono>
 
 namespace time_utils {
 
@@ -35,6 +36,13 @@ std::string currentDateTime() {
     std::ostringstream oss;
     oss << std::put_time(tm, "%Y-%m-%d %H:%M");
     return oss.str();
+}
+
+time_t toTimeT(const std::string& date) {
+    std::tm tm = {};
+    std::istringstream iss(date);
+    iss >> std::get_time(&tm, "%Y-%m-%d %H:%M");
+    return std::mktime(&tm);
 }
 
 bool isExpired(const std::string& date) {

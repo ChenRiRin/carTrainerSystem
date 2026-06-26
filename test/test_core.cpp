@@ -251,6 +251,25 @@ void test_existing_student_reservation_deducts() {
     assert(std::abs(mgr.getStudents()[0].remainingHours - 18.75) < 0.001);
 }
 
+void test_reservation_conflict() {
+    Manager mgr(":memory:");
+    mgr.addStudent("13800138000", "张三", "轿车", 10.0);
+    mgr.addReservation("13800138000-01", "2099-12-31 10:00", 60);
+
+    bool caught = false;
+    try {
+        mgr.addReservation("13800138000-01", "2099-12-31 10:30", 60);
+    } catch (const std::runtime_error&) {
+        caught = true;
+    }
+    assert(caught);
+
+    mgr.addReservation("13800138000-01", "2099-12-31 13:00", 60);
+
+    mgr.addStudent("13912345678", "李四", "SUV", 10.0);
+    mgr.addReservation("13912345678-01", "2099-12-31 10:00", 60);
+}
+
 int main() {
     std::cout << "Running core tests..." << std::endl;
 
@@ -266,6 +285,7 @@ int main() {
     TEST(test_student_not_found);
     TEST(test_persistence);
     TEST(test_existing_student_reservation_deducts);
+    TEST(test_reservation_conflict);
 
     std::cout << std::endl;
     std::cout << "Results: " << (testsPassed + testsFailed)

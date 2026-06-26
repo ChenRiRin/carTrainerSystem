@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <ctime>
 
 namespace time_utils {
     int toMinutes(int hours, int minutes);
@@ -9,4 +10,5 @@ namespace time_utils {
     std::string currentDateTime();
     bool isExpired(const std::string& date);
     bool isValidDate(const std::string& date);
+    time_t toTimeT(const std::string& date);
 }

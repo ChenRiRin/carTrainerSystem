@@ -1,0 +1,10 @@
+/Testing/
+build
+cmake-build-debug
+cmake-build-debug-llvm-clang
+cmake-build-release
+cmake-build-release-llvm-clang
+CMakeFiles
+.gitignore
+.idea
+opencode.json
